@@ -324,8 +324,8 @@ public enum Moves {
         @Override
         public void apply(CalculationContext context, int x, int y, int z, MutableMoveResult result) {
             MovementParkour.cost(context, x, y, z, Direction.WEST, result);
-        },
-	 },
+        }
+    },
 
     PARKOUR_ADV_NORTH(0, 0, -5, true, true) {
         @Override

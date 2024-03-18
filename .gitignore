@@ -33,6 +33,7 @@ baritone_Client.launch
 # Copyright Files
 !/.idea/copyright/Baritone.xml
 !/.idea/copyright/profiles_settings.xml
+/bin/
 
 .vscode/launch.json
 .architectury-transformer

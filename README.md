@@ -52,11 +52,11 @@
 
 A Minecraft pathfinder bot.
 
-Baritone is the pathfinding system used in [Impact](https://impactclient.net/) since 4.4. [Here's](https://www.youtube.com/watch?v=StquF69-_wI) a (very old!) video I made showing off what it can do.
+This is a fork that attempts to merge [Zephreo's diagonal parkour](https://github.com/Zephreo/baritone/tree/master) additions with 1.20.4.
 
 [**Baritone Discord Server**](http://discord.gg/s6fRBAUpmr)
 
-**Quick download links:**
+**Quick download links (not updated yet):**
 
 | Forge                                                                                                         | Fabric                                                                                                        |
 |---------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
@@ -69,6 +69,7 @@ Baritone is the pathfinding system used in [Impact](https://impactclient.net/) s
 | [1.19.4 Forge](https://github.com/cabaletta/baritone/releases/download/v1.9.3/baritone-api-forge-1.9.3.jar)   | [1.19.4 Fabric](https://github.com/cabaletta/baritone/releases/download/v1.9.3/baritone-api-fabric-1.9.3.jar) |
 | [1.20.1 Forge](https://github.com/cabaletta/baritone/releases/download/v1.10.1/baritone-api-forge-1.10.1.jar)   | [1.20.1 Fabric](https://github.com/cabaletta/baritone/releases/download/v1.10.1/baritone-api-fabric-1.10.1.jar) |
 
+
 **Message for 2b2t players looking for 1.19/1.20 Baritone** If you like, please try the beta for Baritone Elytra for 2b2t, find it in #announcements of [the Baritone discord](http://discord.gg/s6fRBAUpmr). It supports 1.19.4 and 1.20.1, Forge or Fabric. If you have to see it to believe it, watch [this YouTube video](https://youtu.be/NnSlQi-68eQ).
 
 **How to immediately get started:** Type `#goto 1000 500` in chat to go to x=1000 z=500. Type `#mine diamond_ore` to mine diamond ore. Type `#stop` to stop. For more, read [the usage page](USAGE.md) and/or watch this [tutorial playlist](https://www.youtube.com/playlist?list=PLnwnJ1qsS7CoQl9Si-RTluuzCo_4Oulpa). Also try `#elytra` for Elytra flying in the Nether using fireworks.
@@ -78,7 +79,6 @@ For other versions of Minecraft or more complicated situations or for developmen
 This project is an updated version of [MineBot](https://github.com/leijurv/MineBot/),
 the original version of the bot for Minecraft 1.8.9, rebuilt for 1.12.2 onwards. Baritone focuses on reliability and particularly performance (it's over [30x faster](https://github.com/cabaletta/baritone/pull/180#issuecomment-423822928) than MineBot at calculating paths).
 
-Have committed at least once a day from Aug 1, 2018, to Aug 1, 2019.
 
 1Leijurv3DWTrGAfmmiTphjhXLvQiHg7K2
 

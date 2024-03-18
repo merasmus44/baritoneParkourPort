@@ -1,9 +1,5 @@
 # Installation
 
-The easiest way to install Baritone is to install [Impact](https://impactclient.net/), which comes with Baritone.
-
-You can also use a custom version json for Minecraft, with the [1.14.4](https://www.dropbox.com/s/rkml3hjokd3qv0m/1.14.4-Baritone.zip?dl=1) version or the [1.15.2](https://www.dropbox.com/s/8rx6f0kts9hvd4f/1.15.2-Baritone.zip?dl=1) version or the [1.16.5](https://www.dropbox.com/s/i6f292o2i7o9acp/1.16.5-Baritone.zip?dl=1) version.
-
 Once Baritone is installed, look [here](USAGE.md) for instructions on how to use it.
 
 ## Prebuilt official releases
@@ -13,7 +9,7 @@ Link to the releases page: [Releases](https://github.com/cabaletta/baritone/rele
 
 v1.2.* is for 1.12.2, v1.3.* is for 1.13.2, v1.4.* is for 1.14.4, v1.5.* is for 1.15.2, v1.6.* is for 1.16.5, v1.7.* is for 1.17.1, v1.8.* is for 1.18.1
 
-Any official release will be GPG signed by leijurv (44A3EA646EADAC6A). Please verify that the hash of the file you download is in `checksums.txt` and that `checksums_signed.asc` is a valid signature by that public keys of `checksums.txt`. 
+Any official release (would) be GPG signed by leijurv (44A3EA646EADAC6A). Please verify that the hash of the file you download is in `checksums.txt` and that `checksums_signed.asc` is a valid signature by that public keys of `checksums.txt`. 
 
 The build is fully deterministic and reproducible, and you can verify Travis did it properly by running `docker build --no-cache -t cabaletta/baritone .` yourself and comparing the shasum. This works identically on Travis, Mac, and Linux (if you have docker on Windows, I'd be grateful if you could let me know if it works there too).
 
@@ -41,6 +37,8 @@ If another one of your Forge mods has a Baritone integration, you want `baritone
 - Follow one of the instruction sets below, based on your preference
 
 ## Command Line
+**Before you build, make sure to set org.gradle.java.home in gradle.properties to the jdk you are using (jdk 21 recommended)**
+**It is recommended to use gradle 8.4 or greater**
 On Mac OSX and Linux, use `./gradlew` instead of `gradlew`.
 
 If you have errors with a package missing please make sure you have setup your environment, and are using Oracle JDK 8 for 1.12.2-1.16.5, JDK 16+ for 1.17.1, and JDK 17+ for 1.18.1.

@@ -23,6 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -119,5 +120,39 @@ public final class VecUtils {
      */
     public static double entityFlatDistanceToCenter(Entity entity, BlockPos pos) {
         return distanceToCenter(pos, entity.position().x, pos.getY() + 0.5, entity.position().z);
+    }
+    /**
+     * Adds vec1 and vec2
+     *
+     * @param vec1  The initial vector
+     * @param vec2  The vector to add
+     * @return      A new resultant vector
+     */
+    public static Vec3i add(Vec3i vec1, Vec3i vec2) {
+        return new Vec3i(vec1.getX() + vec2.getX(), vec1.getY() + vec2.getY(), vec1.getZ() + vec2.getZ());
+    }
+
+    /**
+     * Adds vec1 and vec2
+     *
+     * @param vec1  The initial vector
+     * @param vec2X The x value to add to the vector
+     * @param vec2Y The y value to add to the vector
+     * @param vec2Z The z value to add to the vector
+     * @return      A new resultant vector
+     */
+    public static Vec3i add(Vec3i vec1, int vec2X, int vec2Y, int vec2Z) {
+        return new Vec3i(vec1.getX() + vec2X, vec1.getY() + vec2Y, vec1.getZ() + vec2Z);
+    }
+
+    /**
+     * Subtracts vec2 from vec1; vec1 - vec2
+     *
+     * @param vec1  The initial vector
+     * @param vec2  The vector to subtract
+     * @return      A new resultant vector
+     */
+    public static Vec3i subtract(Vec3i vec1, Vec3i vec2) {
+        return new Vec3i(vec1.getX() - vec2.getX(), vec1.getY() - vec2.getY(), vec1.getZ() - vec2.getZ());
     }
 }

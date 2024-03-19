@@ -56,6 +56,7 @@ public final class BetterBlockPos extends BlockPos {
         this.z = z;
     }
 
+
     public BetterBlockPos(double x, double y, double z) {
         this(Mth.floor(x), Mth.floor(y), Mth.floor(z));
     }
@@ -63,6 +64,10 @@ public final class BetterBlockPos extends BlockPos {
     public BetterBlockPos(BlockPos pos) {
         this(pos.getX(), pos.getY(), pos.getZ());
     }
+
+    public BetterBlockPos add(Vec3i vec) {
+        return new BetterBlockPos(this.x + vec.getX(), this.y + vec.getY(), this.z + vec.getZ());
+    }//had to add this back
 
     /**
      * Like constructor but returns null if pos is null, good if you just need to possibly censor coordinates

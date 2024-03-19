@@ -53,7 +53,7 @@ import net.minecraft.world.effect.MobEffects;
 
 // 1.12.2: import net.minecraft.potion.Potion;
 //1.14: net.minecraft.potion.Effect
-import net.minecraft.potion.Effect;
+import net.minecraft.world.effect.MobEffect;
 
 
 // 1.12.2: import net.minecraft.util.EnumFacing;
@@ -199,15 +199,15 @@ public class MovementParkourAdv extends Movement {
     private int jumpTime;
 
     private MovementParkourAdv(CalculationContext context, BetterBlockPos src, BetterBlockPos dest, Direction jumpDirection, JumpType type) {
-        super(context.baritone, src, dest, EMPTY, dest.down());
+        super(context.baritone, src, dest, EMPTY, dest.below());
         this.jump = VecUtils.subtract(dest, src);
-        double extraAscend = (MovementHelper.isBottomSlab(context.get(src.down())) ? 0.5 : 0) + (MovementHelper.isBottomSlab(context.get(dest.down())) ? -0.5 : 0);
+        double extraAscend = (MovementHelper.isBottomSlab(context.get(src.below())) ? 0.5 : 0) + (MovementHelper.isBottomSlab(context.get(dest.below())) ? -0.5 : 0);
         this.moveDist = calcMoveDist(context, src.x, src.y, src.z, jump.getX(), jump.getY(), jump.getZ(), extraAscend, jumpDirection);
         this.ascendAmount = jump.getY() + extraAscend;
         this.jumpDirection = jumpDirection;
         this.type = type;
         this.distanceXZ = getDistance(new Vec3i(dest.x - src.x, 0, dest.z - src.z), jumpDirection);
-        this.jumpAngle = (float) (getSignedAngle(jumpDirection.getXOffset(), jumpDirection.getZOffset(), jump.getX(), jump.getZ()));
+        this.jumpAngle = (float) (getSignedAngle(jumpDirection, jumpDirection.getZOffset(), jump.getX(), jump.getZ()));
         this.destDirection = getDestDirection(jumpDirection, jumpAngle);
         this.entryDirection = getValidEntryPoint(context, src.x, src.y, src.z, jump.getX(), jump.getY(), jump.getZ(), jumpDirection, destDirection, type);
         this.entryPoint = new Vec3(entryDirection.getOpposite().getDirectionVec()).scale(0.5).add(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5);
@@ -1002,8 +1002,8 @@ public class MovementParkourAdv extends Movement {
      * @param effect The effect to find
      * @return The amplifier of the given effect
      */
-    private static int getPotionEffectAmplifier(IPlayerContext ctx, Potion effect) {
-        if (Baritone.settings().considerPotionEffects.value && ctx.player().isPotionActive(effect)) {
+    private static int getPotionEffectAmplifier(IPlayerContext ctx, MobEffect effect) {
+        if (Baritone.settings().considerPotionEffects.value && ctx.player().hasEffect(effect)) {
             return ctx.player().getActivePotionEffect(effect).getAmplifier() + 1;
         } else {
             return 0;
@@ -1313,7 +1313,7 @@ public class MovementParkourAdv extends Movement {
         		MovementHelper.moveTowards(ctx, state, dest);
         		ticksAtDest++;
         	} else {
-                BlockState landingOn = ctx.world().getBlockState(dest.down());
+                BlockState landingOn = ctx.world().getBlockState(dest.below());
                 double remMotion = motionVecPred.length();
                 double distance;
                 if (remMotion < 0.08) {
@@ -1425,7 +1425,7 @@ public class MovementParkourAdv extends Movement {
                 state.setInput(Input.JUMP, true);
                 ticksSinceJump = 0; // Reset ticks from momentum/run-up phase
             }
-            if (!MovementHelper.canWalkOn(ctx, dest.down()) && !ctx.player().onGround && MovementHelper.attemptToPlaceABlock(state, baritone, dest.down(), true, false) == PlaceResult.READY_TO_PLACE) {
+            if (!MovementHelper.canWalkOn(ctx, dest.below()) && !ctx.player().onGround && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
                 state.setInput(Input.CLICK_RIGHT, true);
             }
         }

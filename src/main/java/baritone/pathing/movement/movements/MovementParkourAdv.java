@@ -74,6 +74,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.Vec3i;
 
 
+import net.minecraft.core.BlockPos.MutableBlockPos;
+
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -607,7 +609,13 @@ public static void cost(CalculationContext context, int srcX, int srcY, int srcZ
         double moveDis;
         BlockState destInto = context.bsi.get0(destX, destY, destZ);
         // Must ascend here as foot has block, && no block in head at destination (if ascend)
-        if (!MovementHelper.fullyPassable(context.bsi.access, context.bsi.isPassableBlockPos.setPos(destX, destY, destZ), destInto) && type != JumpType.NORMAL_STRAIGHT_DESCEND) {
+
+	//MutableBlockPos blockPosT = context.bsi.isPassableBlockPos;
+	//blockPosT.setPos(destX, destY, destZ);
+
+	// temporary fix?
+
+        if (!MovementHelper.fullyPassable(context, destX, destY, destZ, destInto) && type != JumpType.NORMAL_STRAIGHT_DESCEND) {
             moveDis = calcMoveDist(context, srcX, srcY, srcZ, posbJump.getX(), posbJump.getY() + 1, posbJump.getZ(), extraAscend, jumpDirection);
 
             if (moveDis > maxJump) {
@@ -732,7 +740,7 @@ private static double calcMoveDist(CalculationContext context, int srcX, int src
 
     // Modifying distance so that ascends have larger distances while descends have smaller
     if (ascendAmount > 0) {
-        if (ascendAmount > calcMaxJumpHeight(true, getPotionEffectAmplifier(context.baritone.getPlayerContext(), MobEffects.JUMP_BOOST))) {
+        if (ascendAmount > calcMaxJumpHeight(true, getPotionEffectAmplifier(context.baritone.getPlayerContext(), MobEffects.JUMP))) {
             return COST_INF; // any value > the highest sprint jump distance (about 5)
         }
         distance += ascendAmount * ASCEND_DIST_PER_BLOCK;
@@ -929,7 +937,7 @@ protected boolean prepared(MovementState state) {
      * @return The y velocity calculated (+ is up)
      */
     private static double calcFallVelocity(int ticksFromStart, boolean jump, IPlayerContext ctx) {
-        return calcFallVelocity(ticksFromStart, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP_BOOST));
+        return calcFallVelocity(ticksFromStart, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP));
     }
 
     /**
@@ -959,7 +967,7 @@ protected boolean prepared(MovementState state) {
      * @return The relative y position of the player
      */
     private static double calcFallPosition(int ticksFromStart, boolean jump, IPlayerContext ctx) {
-        return calcFallPosition(ticksFromStart, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP_BOOST));
+        return calcFallPosition(ticksFromStart, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP));
 
     }
 
@@ -1000,7 +1008,7 @@ protected boolean prepared(MovementState state) {
      * @return The jump time in ticks
      */
     private static int calcJumpTime(double height, boolean jump, IPlayerContext ctx) {
-        return calcJumpTime(height, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP_BOOST));
+        return calcJumpTime(height, jump, getPotionEffectAmplifier(ctx, MobEffects.JUMP));
     }
     
     private static final double MAX_JUMP_HEIGHT_NORMAL = 1.251;

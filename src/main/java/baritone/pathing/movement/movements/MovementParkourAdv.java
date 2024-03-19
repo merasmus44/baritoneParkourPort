@@ -26,6 +26,8 @@ import baritone.utils.BlockStateInterface;
 import baritone.utils.pathing.MutableMoveResult;
 
 
+import net.minecraft.client.player.LocalPlayer;
+
 // 1.12.2: import net.minecraft.block.Block;
 import net.minecraft.world.level.block.Block;
 
@@ -69,7 +71,7 @@ import net.minecraft.core.BlockPos;
 
 
 import net.minecraft.world.phys.Vec3;
-
+import net.minecraft.world.phys.AABB;
 
 import net.minecraft.core.Vec3i;
 
@@ -860,13 +862,19 @@ protected boolean prepared(MovementState state) {
         default:
             throw new UnsupportedOperationException("Add the new JumpType to this switch.");
     }
-    Vec3 preJumpPos = offset.add(src.x + 0.5, ctx.player().posY, src.z + 0.5);
+    Vec3 preJumpPos = offset.add(src.x + 0.5, ctx.player().getY(), src.z + 0.5);
     double distance = preJumpPos.distanceTo(ctx.playerFeetAsVec());
-    boolean prepLocPassable = MovementHelper.fullyPassable(ctx, src.add(new BlockPos(offset.add(offset.normalize().scale(0.4))))); // Checking 0.4 blocks in the direction of offset for a block (0.3 is the player hitbox width)
+    // Checking 0.4 blocks in the direction of offset for a block (0.3 is the player hitbox width)
+    boolean prepLocPassable = MovementHelper.fullyPassable(ctx, src.add((int)Math.round(offset.x + offset.normalize().x * 0.4), (int)Math.round(offset.y + offset.normalize().y * 0.4), (int)Math.round(offset.z + offset.normalize().z * 0.4)));
     if (((distance > accuracy && prepLocPassable) || (distance > (PREP_OFFSET - (0.2 - accuracy)) && !prepLocPassable)) &&
             (ticksAtDest < 8 || accuracy >= 0.1)) { // Accuracies under 0.1 will require additional wait ticks to reduce excess momentum
         if (ticksAtDest < 6) {
-            MovementHelper.moveTowards(ctx, state, offset.add(VecUtils.getBlockPosCenter(src)));
+	    int offsetX = (int) offset.x;
+	    int offsetY = (int) offset.y;
+	    int offsetZ = (int) offset.z;
+	    BlockPos newPos = new BlockPos(src.getX() + offsetX, src.getY() + offsetY, src.getZ() + offsetZ);
+	    MovementHelper.moveTowards(ctx, state, newPos);
+            //MovementHelper.moveTowards(ctx, state, BlockPos.ORIGIN.offset((int) offset.x, (int) offset.y, (int) offset.z).add(src.getX(), src.getY(), src.getZ()));
         }
         if (distance < 0.25) {
             state.setInput(Input.SNEAK, true);
@@ -1047,7 +1055,7 @@ protected boolean prepared(MovementState state) {
      */
     private static int getPotionEffectAmplifier(IPlayerContext ctx, MobEffect effect) {
         if (Baritone.settings().considerPotionEffects.value && ctx.player().hasEffect(effect)) {
-            return ctx.player().getActivePotionEffect(effect).getAmplifier() + 1;
+            return ctx.player().getEffect(effect).getAmplifier() + 1;
         } else {
             return 0;
         }
@@ -1125,7 +1133,7 @@ protected boolean prepared(MovementState state) {
      * @param inwards whether we are moving inwards (towards src) or outwards (away from src)
      */
     private void landHere(IPlayerContext ctx, BlockPos src, MovementState state, int ticksRemaining, boolean inwards) {
-        if (!inwards && getDistanceToEdgeNeg(ctx.player().posX, ctx.player().posZ, src, 0.8) < 0) {
+        if (!inwards && getDistanceToEdgeNeg(ctx.player().getX(), ctx.player().getZ(), src, 0.8) < 0) {
             // if we are moving outwards and we are already over the edge.
             logDebug("Fallen?");
             return;
@@ -1232,6 +1240,15 @@ protected boolean prepared(MovementState state) {
     double prevDistance = 2; // starting value >= root(2)
     boolean initialLanding = true;
 
+    private boolean isPlayerOnGround(){//VERY SLOW
+
+	LocalPlayer player = ctx.player();
+	double posY = player.getY();
+	AABB boundingBox = player.getBoundingBox();
+	AABB lowerBox = new AABB(boundingBox.minX, posY - 0.001, boundingBox.minZ, boundingBox.maxX, posY, boundingBox.maxZ);
+	return player.level.blockCollidesWith(lowerBox);
+    }
+
 @Override
 public MovementState updateState(MovementState state) {
     super.updateState(state);
@@ -1246,7 +1263,7 @@ public MovementState updateState(MovementState state) {
 
     ticksSinceJump++;
 
-    if (ctx.player().posY < (src.y + Math.min(ascendAmount, 0) - 0.5)) {
+    if (ctx.player().getY() < (src.y + Math.min(ascendAmount, 0) - 0.5)) {
         // we have fallen
         logDebug("Fallen during jump phase");
         return state.setStatus(MovementStatus.UNREACHABLE);
@@ -1264,7 +1281,7 @@ public MovementState updateState(MovementState state) {
     Vec3 jumpLoc = new Vec3(0.5 + (jumpMod * destDirection.getStepX()) + (jumpDirection.getStepX() * (0.5 + JUMP_OFFSET)), 0,
             0.5 + (jumpMod * destDirection.getStepZ()) + (jumpDirection.getStepZ() * (0.5 + JUMP_OFFSET)));
     Vec3 startLoc = new Vec3(src.getX() + 0.5, src.getY(),src.getZ() + 0.5);
-    Vec3 destVec = new Vec3(dest.getX() + 0.5 - ctx.player().posX, dest.getY() - ctx.player().posY, dest.getZ() + 0.5 - ctx.player().posZ); // The vector pointing from the players location to the destination
+    Vec3 destVec = new Vec3(dest.getX() + 0.5 - ctx.player().getX(), dest.getY() - ctx.player().posY, dest.getZ() + 0.5 - ctx.player().getZ()); // The vector pointing from the players location to the destination
 
     double curDist = Math.sqrt(ctx.playerFeetAsVec().squareDistanceTo(dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5));
     double distToJumpXZ = ctx.playerFeetAsVec().distanceTo(jumpLoc.add(src.x, 0, src.z));
@@ -1272,13 +1289,14 @@ public MovementState updateState(MovementState state) {
     double distFromStartXZ = ctx.playerFeetAsVec().distanceTo(startLoc.subtract(0, startLoc.y - ctx.playerFeetAsVec().y, 0));
 
     MovementHelper.moveTowards(ctx, state, dest); // set initial look direction (for prediction)
+    //BIG YIKES! MOVEMENT PREDICTION WAS COMPLETELY REMOVED, that's gonna be a pain to port :/
     MovementPrediction.PredictionResult future = MovementPrediction.getFutureLocation(ctx.player(), state, 1); // The predicted location 1 tick in the future
     Vec3 motionVecPred = future.getPosition().subtract(ctx.playerFeetAsVec());
     int ticksRemaining = jumpTime - ticksSinceJump;
 
     Vec3 curDest = null; // The current destination (position we are moving towards)
 
-    if (ctx.playerFeet().equals(src) || ctx.playerFeet().equals(src.up()) || (ctx.player().onGround && distToJumpXZ < 0.5 && distFromStartXZ < 1.2) ||
+    if (ctx.playerFeet().equals(src) || ctx.playerFeet().equals(src.above()) || (isPlayerOnGround() && distToJumpXZ < 0.5 && distFromStartXZ < 1.2) ||
             (type == JumpType.MOMENTUM_NO_BLOCK && distFromStartXZ < 0.8)) { 
     	// The phase to be executed just before we make the main jump possibly including a few ticks afterwards
         switch (type) {
@@ -1350,7 +1368,7 @@ public MovementState updateState(MovementState state) {
             default:
                 throw new UnsupportedOperationException("Add new movement to this switch.");
         }
-    } else if (curDist < 1 && ctx.player().onGround) {
+    } else if (curDist < 1 && isPlayerOnGround()) {
     	// The landing phase. Make sure we don't have momentum that could cause us to fall and also make sure our center is within the destination block.
     	if (curDist > 0.45) {
     		MovementHelper.moveTowards(ctx, state, dest);
@@ -1460,7 +1478,7 @@ public MovementState updateState(MovementState state) {
         if ((((Math.abs(future.posX - (src.x + 0.5)) > 0.85 || Math.abs(future.posZ - (src.z + 0.5)) > 0.85) && distFromStart < 1.2) || // Center 0.5 + Player hitbox 0.3 = 0.8, if we are this distance from src, jump
                 ((type == JumpType.MOMENTUM_BLOCK || type == JumpType.MOMENTUM_NO_BLOCK) && distToJumpXZ < 0.6) || // During a momentum jump the momentum jump will position us so just jump whenever possible (i.e. as soon as we land)
                 ((type == JumpType.EDGE || type == JumpType.EDGE_NEO) && distFromStart < 1.2))  // The prepLoc of an edge jump is on the edge of the block so just jump straight away
-                && ctx.player().onGround) { // To only log Jumping when we can actually jump
+                && isPlayerOnGround()) { // To only log Jumping when we can actually jump
             if (type == JumpType.MOMENTUM_BLOCK || type == JumpType.MOMENTUM_NO_BLOCK) {
                 MovementHelper.moveTowards(ctx, state, dest); // make sure we are looking at the target when we jump for sprint jump bonuses
                 state.setInput(Input.SPRINT, true);
@@ -1468,7 +1486,8 @@ public MovementState updateState(MovementState state) {
             state.setInput(Input.JUMP, true);
             ticksSinceJump = 0; // Reset ticks from momentum/run-up phase
         }
-        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !ctx.player().onGround && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
+
+        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !isPlayerOnGround() && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
             state.setInput(Input.CLICK_RIGHT, true);
         }
     }
@@ -1481,7 +1500,12 @@ public MovementState updateState(MovementState state) {
 
         // adjust movement to attempt to dodge obstacles
         if (future5.collidedHorizontally && future5.posY > dest.getY() - 0.3 && future5.posY < dest.getY() + 0.5 && type != JumpType.NORMAL_CRAMPED) {
-            double angleDiff = getSignedAngle(destVec.subtract(future5.getPosition()), ctx.player().getLookVec());
+            //double angleDiff = getSignedAngle(destVec.subtract(future5.getPosition()), ctx.player().getLookVec());
+	    double yaw = Math.toRadians(ctx.player().getYRot());
+	    double pitch = Math.toRadians(ctx.player().getXRot());
+	    Vec3 lookVec = new Vec3(-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+	    double angleDiff = getSignedAngle(destVec.subtract(future5.getPosition()), lookVec);
+
             if(Math.abs(angleDiff) > 25) {
                 // Adjusting movement to dodge an obstacle. Predicted collision location = future5.getPosition()
                 state.setInput(sideMove(angleDiff), true);

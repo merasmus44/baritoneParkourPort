@@ -22,6 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A better BlockPos that has fewer hash collisions (and slightly more performant offsets)
@@ -68,6 +69,14 @@ public final class BetterBlockPos extends BlockPos {
     public BetterBlockPos add(Vec3i vec) {
         return new BetterBlockPos(this.x + vec.getX(), this.y + vec.getY(), this.z + vec.getZ());
     }//had to add this back
+
+    public BetterBlockPos add(Vec3 vec) {
+        return new BetterBlockPos(this.x + vec.x, this.y + vec.y, this.z + vec.z);
+    }//had to add this back
+
+    public BetterBlockPos add(int x, int y, int z) {
+        return new BetterBlockPos(this.x + x, this.y + y, this.z + z);
+    }
 
     /**
      * Like constructor but returns null if pos is null, good if you just need to possibly censor coordinates

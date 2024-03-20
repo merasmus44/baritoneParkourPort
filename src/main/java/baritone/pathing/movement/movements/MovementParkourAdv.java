@@ -1597,7 +1597,7 @@ public MovementState updateState(MovementState state) {
                 && isPlayerOnGround()) { // To only log Jumping when we can actually jump
             if (type == JumpType.MOMENTUM_BLOCK || type == JumpType.MOMENTUM_NO_BLOCK) {
                 MovementHelper.moveTowards(ctx, state, dest); // make sure we are looking at the target when we jump for sprint jump bonuses
-                state.setInput(Input.SPRINT, true);
+                state.setInput(Input.SPRINT, true); 
             }
             state.setInput(Input.JUMP, true);
             ticksSinceJump = 0; // Reset ticks from momentum/run-up phase

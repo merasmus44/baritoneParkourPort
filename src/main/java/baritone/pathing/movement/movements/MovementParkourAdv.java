@@ -1240,14 +1240,43 @@ protected boolean prepared(MovementState state) {
     double prevDistance = 2; // starting value >= root(2)
     boolean initialLanding = true;
 
-    private boolean isPlayerOnGround(){//VERY SLOW
+private boolean isPlayerOnGround() { // Slow
+    LocalPlayer player = ctx.player();
+    double posY = player.getY();
+    AABB boundingBox = player.getBoundingBox();
+    AABB lowerBox = new AABB(boundingBox.minX, posY - 0.001, boundingBox.minZ, boundingBox.maxX, posY, boundingBox.maxZ);
 
-	LocalPlayer player = ctx.player();
-	double posY = player.getY();
-	AABB boundingBox = player.getBoundingBox();
-	AABB lowerBox = new AABB(boundingBox.minX, posY - 0.001, boundingBox.minZ, boundingBox.maxX, posY, boundingBox.maxZ);
-	return player.level.blockCollidesWith(lowerBox);
-    }
+    int minX = (int) Math.floor(lowerBox.minX);
+    int minY = (int) Math.floor(lowerBox.minY);
+    int minZ = (int) Math.floor(lowerBox.minZ);
+    int maxX = (int) Math.floor(lowerBox.maxX);
+    int maxY = (int) Math.floor(lowerBox.maxY);
+    int maxZ = (int) Math.floor(lowerBox.maxZ);
+
+    for (int x = minX; x <= maxX; ++x)
+        for (int y = minY; y <= maxY; ++y)
+            for (int z = minZ; z <= maxZ; ++z)
+                if (!ctx.world().getBlockState(new BlockPos(x, y, z)).getCollisionShape(ctx.world(), new BlockPos(x, y, z)).isEmpty())
+                    return true;
+
+    return false;
+}
+
+
+
+private Vec3i directionToVector(Direction direction){
+
+	Vec3i offset = switch (jumpDirection) {
+    		case NORTH -> new Vec3i(0, 0, -2);
+    		case SOUTH -> new Vec3i(0, 0, 2);
+  		  case EAST -> new Vec3i(2, 0, 0);
+  		  case WEST -> new Vec3i(-2, 0, 0);
+  		  default -> throw new IllegalArgumentException("Unsupported direction: " + jumpDirection);
+	};
+	return offset;
+
+}
+
 
 @Override
 public MovementState updateState(MovementState state) {
@@ -1281,9 +1310,15 @@ public MovementState updateState(MovementState state) {
     Vec3 jumpLoc = new Vec3(0.5 + (jumpMod * destDirection.getStepX()) + (jumpDirection.getStepX() * (0.5 + JUMP_OFFSET)), 0,
             0.5 + (jumpMod * destDirection.getStepZ()) + (jumpDirection.getStepZ() * (0.5 + JUMP_OFFSET)));
     Vec3 startLoc = new Vec3(src.getX() + 0.5, src.getY(),src.getZ() + 0.5);
-    Vec3 destVec = new Vec3(dest.getX() + 0.5 - ctx.player().getX(), dest.getY() - ctx.player().posY, dest.getZ() + 0.5 - ctx.player().getZ()); // The vector pointing from the players location to the destination
+    Vec3 destVec = new Vec3(dest.getX() + 0.5 - ctx.player().getX(), dest.getY() - ctx.player().getY(), dest.getZ() + 0.5 - ctx.player().getZ()); // The vector pointing from the players location to the destination
 
-    double curDist = Math.sqrt(ctx.playerFeetAsVec().squareDistanceTo(dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5));
+    //double curDist = Math.sqrt(ctx.playerFeetAsVec().squareDistanceTo(dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5));
+    double curDist = Math.sqrt(
+    Math.pow(dest.getX() + 0.5 - ctx.playerFeetAsVec().x, 2) +
+    Math.pow(dest.getY() - ctx.playerFeetAsVec().y, 2) +
+    Math.pow(dest.getZ() + 0.5 - ctx.playerFeetAsVec().z, 2)
+    );
+
     double distToJumpXZ = ctx.playerFeetAsVec().distanceTo(jumpLoc.add(src.x, 0, src.z));
     double distFromStart = ctx.playerFeetAsVec().distanceTo(startLoc);
     double distFromStartXZ = ctx.playerFeetAsVec().distanceTo(startLoc.subtract(0, startLoc.y - ctx.playerFeetAsVec().y, 0));
@@ -1303,7 +1338,8 @@ public MovementState updateState(MovementState state) {
             case NORMAL:
             case NORMAL_CRAMPED:
             case NORMAL_STRAIGHT_DESCEND:
-                MovementHelper.moveTowards(ctx, state, jumpLoc.scale(jumpExtension).add(src.x, src.y, src.z));
+                MovementHelper.moveTowards(ctx, state, new BlockPos((int) Math.floor(jumpLoc.x * jumpExtension + src.x), (int) Math.floor(jumpLoc.y * jumpExtension + src.y), (int) Math.floor(jumpLoc.z * jumpExtension + src.z)));
+		//MovementHelper.moveTowards(ctx, state, jumpLoc.scale(jumpExtension).add(src.x, src.y, src.z));
                 break;
             case MOMENTUM_BLOCK:
                 if (ticksSinceJump == 0) {
@@ -1315,9 +1351,15 @@ public MovementState updateState(MovementState state) {
                         landHere(ctx, src, state, calcJumpTime(0, true, ctx) - ticksSinceJump, false);
                     } else if (ticksSinceJump <= 1 || ticksSinceJump == 3) {
                         state.getInputStates().remove(Input.SPRINT); // not sprinting for a few ticks
-                        MovementHelper.moveTowards(ctx, state, src.offset(jumpDirection));
+                        Vec3i directionVector = directionToVector(jumpDirection);
+			MovementHelper.moveTowards(ctx, state, src.offset(directionVector));
+
                     } else {
-                        MovementHelper.moveTowards(ctx, state, src.offset(jumpDirection, 2));
+			int x = switch (jumpDirection) {case NORTH, SOUTH -> 0; case EAST -> 2; case WEST -> -2; default -> throw new IllegalArgumentException("Unsupported direction: " + jumpDirection);};
+			int z = switch (jumpDirection) {case EAST, WEST -> 0; case NORTH -> -2; case SOUTH -> 2; default -> throw new IllegalArgumentException("Unsupported direction: " + jumpDirection);};
+			MovementHelper.moveTowards(ctx, state, src.offset(x, 0, z));
+
+
                     }
                 } else {
                     state.getInputStates().remove(Input.MOVE_FORWARD); // don't move for a few ticks
@@ -1329,11 +1371,17 @@ public MovementState updateState(MovementState state) {
                     landHere(ctx, src, state, calcJumpTime(0, true, ctx) - ticksSinceJump, false);
                 } else if (ticksSinceJump != 0) {
                     state.setTarget(new MovementState.MovementTarget(
-                            new Rotation(RotationUtils.calcRotationFromVec3(ctx.playerHead(),
-                                    VecUtils.getBlockPosCenter(src.offset(jumpDirection, 2)),
-                                    ctx.playerRotations()).getYaw(), ctx.player().rotationPitch),
+                            new Rotation(
+    				RotationUtils.calcRotationFromVec3(
+   				     ctx.playerHead(),
+  				      VecUtils.getBlockPosCenter(src.offset(jumpDirection, 2)),
+  				      ctx.playerRotations()).getYaw(),ctx.player().getXRot()),
                             false
                     ));
+
+
+
+
                     state.getInputStates().remove(Input.MOVE_FORWARD);
                 } else {
                     MovementHelper.moveTowards(ctx, state, src.offset(jumpDirection, 2));
@@ -1487,7 +1535,7 @@ public MovementState updateState(MovementState state) {
             ticksSinceJump = 0; // Reset ticks from momentum/run-up phase
         }
 
-        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !isPlayerOnGround() && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
+        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !f && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
             state.setInput(Input.CLICK_RIGHT, true);
         }
     }

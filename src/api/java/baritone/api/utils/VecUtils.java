@@ -79,6 +79,7 @@ public final class VecUtils {
         return new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
     }
 
+
     /**
      * Gets the distance from the specified position to the assumed center of the specified block position.
      *
@@ -132,6 +133,7 @@ public final class VecUtils {
         return new Vec3i(vec1.getX() + vec2.getX(), vec1.getY() + vec2.getY(), vec1.getZ() + vec2.getZ());
     }
 
+
     /**
      * Adds vec1 and vec2
      *
@@ -144,6 +146,8 @@ public final class VecUtils {
     public static Vec3i add(Vec3i vec1, int vec2X, int vec2Y, int vec2Z) {
         return new Vec3i(vec1.getX() + vec2X, vec1.getY() + vec2Y, vec1.getZ() + vec2Z);
     }
+
+    
 
     /**
      * Subtracts vec2 from vec1; vec1 - vec2

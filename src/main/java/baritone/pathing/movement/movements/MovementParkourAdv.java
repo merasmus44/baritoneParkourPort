@@ -15,6 +15,8 @@
  * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+// this code is held together with tape
+
 package baritone.pathing.movement.movements;
 
 import baritone.Baritone;
@@ -1264,19 +1266,59 @@ private boolean isPlayerOnGround() { // Slow
 
 
 
-private Vec3i directionToVector(Direction direction){
+private Vec3i directionToVector3I(Direction direction){
 
-	Vec3i offset = switch (jumpDirection) {
+	Vec3i offset = switch (direction) {
     		case NORTH -> new Vec3i(0, 0, -2);
     		case SOUTH -> new Vec3i(0, 0, 2);
   		  case EAST -> new Vec3i(2, 0, 0);
   		  case WEST -> new Vec3i(-2, 0, 0);
-  		  default -> throw new IllegalArgumentException("Unsupported direction: " + jumpDirection);
+  		  default -> throw new IllegalArgumentException("Unsupported direction: " + direction);
 	};
 	return offset;
 
 }
 
+
+private Vec3 directionToVector3(Direction direction){
+
+	Vec3 offset = switch (direction) {
+    		case NORTH -> new Vec3(0, 0, -2);
+    		case SOUTH -> new Vec3(0, 0, 2);
+  		  case EAST -> new Vec3(2, 0, 0);
+  		  case WEST -> new Vec3(-2, 0, 0);
+  		  default -> throw new IllegalArgumentException("Unsupported direction: " + direction);
+	};
+	return offset;
+
+}
+
+
+private float getHorizontalAngle(Direction direction) {
+    switch (direction) {
+        case NORTH:
+            return 180.0f;
+        case SOUTH:
+            return 0.0f;
+        case EAST:
+            return -90.0f;
+        case WEST:
+            return 90.0f;
+        // Handle other directions if necessary
+        default:
+            throw new IllegalArgumentException("Unsupported direction: " + direction);
+    }
+}
+
+
+private BlockPos vec3ToBlockPos(Vec3 vec){
+	return new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y), (int) Math.floor(vec.z));
+}
+
+
+private boolean isSlippery(BlockState landingOn){
+	return (landingOn.getBlock() == Blocks.ICE || landingOn.getBlock() == Blocks.PACKED_ICE || landingOn.getBlock() == Blocks.BLUE_ICE);
+}
 
 @Override
 public MovementState updateState(MovementState state) {
@@ -1351,7 +1393,7 @@ public MovementState updateState(MovementState state) {
                         landHere(ctx, src, state, calcJumpTime(0, true, ctx) - ticksSinceJump, false);
                     } else if (ticksSinceJump <= 1 || ticksSinceJump == 3) {
                         state.getInputStates().remove(Input.SPRINT); // not sprinting for a few ticks
-                        Vec3i directionVector = directionToVector(jumpDirection);
+                        Vec3i directionVector = directionToVector3I(jumpDirection);
 			MovementHelper.moveTowards(ctx, state, src.offset(directionVector));
 
                     } else {
@@ -1370,25 +1412,33 @@ public MovementState updateState(MovementState state) {
                     MovementHelper.moveTowards(ctx, state, dest);
                     landHere(ctx, src, state, calcJumpTime(0, true, ctx) - ticksSinceJump, false);
                 } else if (ticksSinceJump != 0) {
-                    state.setTarget(new MovementState.MovementTarget(
-                            new Rotation(
-    				RotationUtils.calcRotationFromVec3(
-   				     ctx.playerHead(),
-  				      VecUtils.getBlockPosCenter(src.offset(jumpDirection, 2)),
-  				      ctx.playerRotations()).getYaw(),ctx.player().getXRot()),
-                            false
-                    ));
+
+			Vec3i jumpVector = directionToVector3I(jumpDirection);
+			Rotation rotation = new Rotation(
+			    RotationUtils.calcRotationFromVec3d(
+			    ctx.playerHead(),
+			    VecUtils.getBlockPosCenter(src.offset(jumpVector.getX() * 2, jumpVector.getY() * 2, jumpVector.getZ() * 2)),
+			    ctx.playerRotations()
+			).getYaw(),
+			    ctx.player().getXRot()
+			);
+
+			state.setTarget(new MovementState.MovementTarget(
+			    rotation,
+ 			   false 
+			));
+
 
 
 
 
                     state.getInputStates().remove(Input.MOVE_FORWARD);
                 } else {
-                    MovementHelper.moveTowards(ctx, state, src.offset(jumpDirection, 2));
+                    MovementHelper.moveTowards(ctx, state, src.offset(directionToVector3I(jumpDirection)).offset(0, 0, 2));
                     state.getInputStates().remove(Input.SPRINT);
                 }
                 if (ticksSinceJump == 0) {
-                    MovementHelper.moveTowards(ctx, state, src.offset(jumpDirection, 2));
+                    MovementHelper.moveTowards(ctx, state, src.offset(directionToVector3I(jumpDirection)).offset(0, 0, 2));
                     state.setInput(Input.SPRINT, true);
                     state.setInput(Input.JUMP, true);
                 }
@@ -1399,19 +1449,37 @@ public MovementState updateState(MovementState state) {
                             new Rotation((float) getSignedAngle(Direction.SOUTH.getStepX(), Direction.SOUTH.getStepZ(), dest.x - src.x - jumpDirection.getStepX() * 0.6, dest.z - src.z - jumpDirection.getStepZ() * 0.6),
                                     ctx.playerRotations().getPitch()), true));
                 } else if (Math.abs(jumpAngle) < 50) { // 45 degree jump
-                    state.setTarget(new MovementState.MovementTarget(
-                            new Rotation(destDirection.getHorizontalAngle() - Float.compare(jumpAngle, 0) * 10,
-                                    ctx.playerRotations().getPitch()), true));
+			float rotationAngle = switch (destDirection) {
+   			 case NORTH -> 180.0f;
+ 			   case SOUTH -> 0.0f;
+  			  case WEST -> 90.0f;
+ 			   case EAST -> -90.0f;
+			    default -> throw new IllegalArgumentException("Unsupported direction: " + destDirection);
+			} - (Float.compare(jumpAngle, 0) * 10);
+
+			state.setTarget(new MovementState.MovementTarget(new Rotation(rotationAngle, ctx.playerRotations().getPitch()), true));
+
                 } else if (Math.abs(jumpAngle) < 60) { // 56 degree jump
-                    state.setTarget(new MovementState.MovementTarget(
-                            new Rotation(destDirection.getHorizontalAngle() - Float.compare(jumpAngle, 0) * 10,
-                                    ctx.playerRotations().getPitch()), true));
+                    float rotationAngle = switch (destDirection) {
+   			 case NORTH -> 180.0f;
+ 			   case SOUTH -> 0.0f;
+  			  case WEST -> 90.0f;
+ 			   case EAST -> -90.0f;
+			    default -> throw new IllegalArgumentException("Unsupported direction: " + destDirection);
+			} - (Float.compare(jumpAngle, 0) * 10);
+
+			state.setTarget(new MovementState.MovementTarget(new Rotation(rotationAngle, ctx.playerRotations().getPitch()), true));
                 }
                 state.setInput(Input.SPRINT, true);
                 break;
             case EDGE_NEO: // this is actually never called.
-                MovementHelper.moveTowards(ctx, state, VecUtils.getBlockPosCenter(dest.offset(jumpDirection)));
-                state.setInput(sideMove(src, dest, src.offset(jumpDirection)), true); //*/
+		Vec3 offsetVec = directionToVector3(jumpDirection); // this might not work correctly, but It won't be used anyway (hopefully)
+		Vec3 target = VecUtils.getBlockPosCenter(dest).add(offsetVec);
+		BlockPos targetBlockPos = vec3ToBlockPos(target);
+		MovementHelper.moveTowards(ctx, state, targetBlockPos);
+
+
+                state.setInput(sideMove(src, dest, src.offset(directionToVector3I(jumpDirection))), true); //*/
                 break;
             default:
                 throw new UnsupportedOperationException("Add new movement to this switch.");
@@ -1428,13 +1496,13 @@ public MovementState updateState(MovementState state) {
             if (remMotion < 0.08) {
                 distance = prevDistance; // we can still fall off with slow cancelled momentum (e.g. on edge of block)
             } else {
-                distance = getDistanceToEdge(ctx.player().posX, ctx.player().posZ, dest, motionVecPred, 0.5);
+                distance = getDistanceToEdge(ctx.player().getX(), ctx.player().getZ(), dest, motionVecPred, 0.5);
             }
             double slipMod = 0;
-            if (initialLanding && landingOn.getBlock().slipperiness > 0.61) {
+            if (initialLanding && isSlippery(landingOn)) {
                 slipMod = remMotion * 2.9; // lower values of remaining motion while on slippery blocks can still be 0 tick cancels
                 initialLanding = false;
-            } else if (landingOn.getBlock().slipperiness > 0.61) {
+            } else if (isSlippery(landingOn)) {
                 slipMod = remMotion * 4 + 0.5; // slippery surfaces retain a lot of momentum after landing
             }
             if (remMotion + slipMod < distance || (distance < 0.5 && distance > prevDistance)) {
@@ -1453,11 +1521,11 @@ public MovementState updateState(MovementState state) {
             case NORMAL_CRAMPED:
                 if (ticksRemaining >= 3) {
                     // first half of jump
-                	MovementHelper.moveTowards(ctx, state, entryPoint.subtract(entryDirection.getStepX() * 0.25, 0, entryDirection.getStepZ() * 0.25));
+                	MovementHelper.moveTowards(ctx, state, vec3ToBlockPos(entryPoint.subtract(entryDirection.getStepX() * 0.25, 0, entryDirection.getStepZ() * 0.25)));
                 } else {
                     // second half of jump
                 	if (ticksRemaining > 0) {
-                		MovementHelper.moveTowards(ctx, state, entryPoint);
+                		MovementHelper.moveTowards(ctx, state, vec3ToBlockPos(entryPoint));
                 	} else {
                 		MovementHelper.moveTowards(ctx, state, dest);
                 	}                        
@@ -1465,7 +1533,7 @@ public MovementState updateState(MovementState state) {
                 break;
             case EDGE_NEO:
             	if (ticksSinceJump < 3) {
-            		MovementHelper.moveTowards(ctx, state, VecUtils.getBlockPosCenter(dest.offset(jumpDirection)));
+            		MovementHelper.moveTowards(ctx, state, vec3ToBlockPos(VecUtils.getBlockPosCenter(dest.offset(directionToVector3I(jumpDirection)))));
             	} else {
             		MovementHelper.moveTowards(ctx, state, dest);
             	}
@@ -1482,25 +1550,25 @@ public MovementState updateState(MovementState state) {
                             angle = 15;
                         } else {
                             angle = 45;
-                            state.setInput(sideMove(destDirection.getHorizontalAngle(), jumpDirection.getHorizontalAngle()), true);
+                            state.setInput(sideMove(getHorizontalAngle(destDirection), getHorizontalAngle(jumpDirection)), true);
                         }
                         state.setTarget(new MovementState.MovementTarget(
-                                new Rotation(destDirection.getHorizontalAngle() - Float.compare(jumpAngle, 0) * angle,
+                                new Rotation(getHorizontalAngle(destDirection) - Float.compare(jumpAngle, 0) * angle,
                                         ctx.playerRotations().getPitch()), true));
                     } else if (Math.abs(jumpAngle) < 60) { // 56 degree jump
                         state.setTarget(new MovementState.MovementTarget(
-                                new Rotation(destDirection.getHorizontalAngle() - Float.compare(jumpAngle, 0) * 20,
+                                new Rotation(getHorizontalAngle(destDirection) - Float.compare(jumpAngle, 0) * 20,
                                         ctx.playerRotations().getPitch()), true));
                         if (ticksRemaining < 8) {
                             state.setTarget(new MovementState.MovementTarget(
-                                    new Rotation(destDirection.getHorizontalAngle() - Float.compare(jumpAngle, 0) * 45,
+                                    new Rotation(getHorizontalAngle(destDirection) - Float.compare(jumpAngle, 0) * 45,
                                             ctx.playerRotations().getPitch()), true));
                         }
                     }
                     break;
                 } // 63 degree jump uses default destination targeting
                 if (curDist > 1) {
-                	MovementHelper.moveTowards(ctx, state, entryPoint);
+                	MovementHelper.moveTowards(ctx, state, vec3ToBlockPos(entryPoint));
                     curDest = entryPoint;
                 } else {
                 	MovementHelper.moveTowards(ctx, state, dest);
@@ -1508,7 +1576,7 @@ public MovementState updateState(MovementState state) {
                 break;
             default:
                 if (curDist > 1) {
-                	MovementHelper.moveTowards(ctx, state, entryPoint);
+                	MovementHelper.moveTowards(ctx, state, vec3ToBlockPos(entryPoint));
                     curDest = entryPoint;
                 } else {
                 	MovementHelper.moveTowards(ctx, state, dest);
@@ -1535,7 +1603,7 @@ public MovementState updateState(MovementState state) {
             ticksSinceJump = 0; // Reset ticks from momentum/run-up phase
         }
 
-        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !f && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
+        if (!MovementHelper.canWalkOn(ctx, dest.below()) && !isPlayerOnGround() && MovementHelper.attemptToPlaceABlock(state, baritone, dest.below(), true, false) == PlaceResult.READY_TO_PLACE) {
             state.setInput(Input.CLICK_RIGHT, true);
         }
     }

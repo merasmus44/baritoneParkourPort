@@ -27,57 +27,23 @@ import baritone.pathing.movement.*;
 import baritone.utils.BlockStateInterface;
 import baritone.utils.pathing.MutableMoveResult;
 
-
 import net.minecraft.client.player.LocalPlayer;
-
-// 1.12.2: import net.minecraft.block.Block;
 import net.minecraft.world.level.block.Block;
-
-// 1.12.2: import net.minecraft.block.BlockLiquid;
 import net.minecraft.world.level.block.LiquidBlock;
-
-// 1.12.2: import net.minecraft.block.BlockStairs;
-//1.14: net.minecraft.block.StairsBlock;
 import net.minecraft.world.level.block.StairBlock;
-
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.Property;
-
-// 1.12.2: import net.minecraft.block.state.IBlockState;
-//1.14: net.minecraft.block.BlockState;
 import net.minecraft.world.level.block.state.BlockState;
-
-
-// 1.12.2: import net.minecraft.init.Blocks;
-//1.14: net.minecraft.block.Blocks
 import net.minecraft.world.level.block.Blocks;
-
-
-// 1.12.2: import net.minecraft.init.MobEffects;
-//1.14: net.minecraft.potion.Effects
 import net.minecraft.world.effect.MobEffects;
-
-
-// 1.12.2: import net.minecraft.potion.Potion;
-//1.14: net.minecraft.potion.Effect
 import net.minecraft.world.effect.MobEffect;
-
-
-// 1.12.2: import net.minecraft.util.EnumFacing;
-//1.14: net.minecraft.util.Direction
 import net.minecraft.core.Direction;
 
-
-// 1.12.2: import net.minecraft.util.math.BlockPos;
 import net.minecraft.core.BlockPos;
-
 
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
-
 import net.minecraft.core.Vec3i;
-
-
 import net.minecraft.core.BlockPos.MutableBlockPos;
 
 
@@ -1317,7 +1283,7 @@ private BlockPos vec3ToBlockPos(Vec3 vec){
 
 
 private boolean isSlippery(BlockState landingOn){
-	return (landingOn.getBlock() == Blocks.ICE || landingOn.getBlock() == Blocks.PACKED_ICE || landingOn.getBlock() == Blocks.BLUE_ICE);
+	return (landingOn.getBlock().getFriction() > 0.61f);
 }
 
 @Override

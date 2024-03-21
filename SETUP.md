@@ -37,8 +37,8 @@ If another one of your Forge mods has a Baritone integration, you want `baritone
 - Follow one of the instruction sets below, based on your preference
 
 ## Command Line
-**Before you build, make sure to set org.gradle.java.home in gradle.properties to the jdk you are using (jdk 21 recommended)**
-**It is recommended to use gradle 8.4 or greater**
+**Before you build, make sure to set org.gradle.java.home in gradle.properties to the jdk you are using (jdk 18.0.2 recommended)**
+**Gradle 8.4 or greater required**
 On Mac OSX and Linux, use `./gradlew` instead of `gradlew`.
 
 If you have errors with a package missing please make sure you have setup your environment, and are using Oracle JDK 8 for 1.12.2-1.16.5, JDK 16+ for 1.17.1, and JDK 17+ for 1.18.1.

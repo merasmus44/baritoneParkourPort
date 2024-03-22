@@ -500,7 +500,7 @@ public class MovementParkourAdv extends Movement {
 	        Vec3i relativeOffset = new Vec3i(res.x - src.x, 0, res.z - src.z);
 	        JumpType type = ALL_VALID_DIR.get(jumpDirection).get(relativeOffset);
 		
-		BaritoneAPI.getSettings().logger.value.accept(Component.literal(type.toString()));
+		//BaritoneAPI.getSettings().logger.value.accept(Component.literal(type.toString()));
 
 
 	        if (type == JumpType.MOMENTUM) {
@@ -1531,7 +1531,6 @@ public MovementState updateState(MovementState state) {
             	}
             	break;
             case EDGE:
-		BaritoneAPI.getSettings().logger.value.accept(Component.literal("edge"));
                 if (jumpTime <= 15 && ticksSinceJump < jumpTime - 2) {
                     if (Math.abs(jumpAngle) < 40) { // 33 degree jump
                         state.setTarget(new MovementState.MovementTarget(

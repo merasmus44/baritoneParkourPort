@@ -24,10 +24,13 @@ import baritone.api.pathing.movement.MovementStatus;
 import baritone.api.utils.*;
 import baritone.api.utils.input.Input;
 import baritone.pathing.movement.*;
+import baritone.api.BaritoneAPI;
+import baritone.api.Settings;
 import baritone.utils.BlockStateInterface;
 import baritone.utils.pathing.MutableMoveResult;
 
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.StairBlock;
@@ -45,7 +48,10 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.network.chat.MutableComponent;
 
+
+import net.minecraft.core.Rotations;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -185,8 +191,16 @@ public class MovementParkourAdv extends Movement {
            this.jumpAngle = (float) (getSignedAngle(jumpDirection.getStepX(), jumpDirection.getStepZ(), jump.getX(), jump.getZ()));
  	   this.destDirection = getDestDirection(jumpDirection, jumpAngle);
  	   this.entryDirection = getValidEntryPoint(context, src.x, src.y, src.z, jump.getX(), jump.getY(), jump.getZ(), jumpDirection, destDirection, type);
- 	   //this.entryPoint = new Vec3(entryDirection.getOpposite().getDirectionVec()).scale(0.5).add(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5);
-	   this.entryPoint = new Vec3(entryDirection.getStepX(), entryDirection.getStepY(), entryDirection.getStepZ()).scale(0.5).add(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5);
+ 	   
+	   //this.entryPoint = new Vec3(new Vec3(entryDirection.getOpposite().getNormal().getX(), entryDirection.getOpposite().getNormal().getY(), entryDirection.getOpposite().getNormal().getZ())).scale(0.5).add(new Vec3(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5));
+	   
+	   this.entryPoint = new Vec3(
+        	entryDirection.getOpposite().getNormal().getX(), entryDirection.getOpposite().getNormal().getY(), entryDirection.getOpposite().getNormal().getZ()
+	   ).scale(0.5)
+	   .add(new Vec3(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5));
+
+
+	   //this.entryPoint = new Vec3(entryDirection.getStepX(), entryDirection.getStepY(), entryDirection.getStepZ()).scale(0.5).add(dest.x + 0.5, dest.y + ascendAmount, dest.z + 0.5);
 
 	   
 }
@@ -478,13 +492,16 @@ public class MovementParkourAdv extends Movement {
     	Collection<Movement> out = new ArrayList<>();
     	cost(context, src.getX(), src.getY(), src.getZ(), res, jumpDirection);
     	while (res != null) {
-    	    if (res.cost >= COST_INF) {
-   	         res = res.getNext();
+    	   	 if (res.cost >= COST_INF) {
+   	            res = res.getNext();
 	            continue;
-	        }
+	         }
 
-	        Vec3i relativeOffset = new Vec3i(res.x - src.x, 0, res.z - src.y);
+	        Vec3i relativeOffset = new Vec3i(res.x - src.x, 0, res.z - src.z);
 	        JumpType type = ALL_VALID_DIR.get(jumpDirection).get(relativeOffset);
+		
+		BaritoneAPI.getSettings().logger.value.accept(Component.literal(type.toString()));
+
 
 	        if (type == JumpType.MOMENTUM) {
 	            Direction oppositeDirection = jumpDirection.getOpposite();
@@ -557,6 +574,12 @@ public static void cost(CalculationContext context, int srcX, int srcY, int srcZ
 
     for (Vec3i posbJump : ALL_VALID_DIR.get(jumpDirection).keySet()) {
         JumpType type = ALL_VALID_DIR.get(jumpDirection).get(posbJump);
+
+
+	//if (!type){
+		//logDebug("The jump direction isn't valid!");
+		//logDebug(jumpDirection.toString());
+	//}
 
         if ((type == JumpType.MOMENTUM || type == JumpType.EDGE_NEO) && !context.allowParkourMomentumOrNeo) {
             continue;
@@ -728,6 +751,9 @@ private static double calcMoveDist(CalculationContext context, int srcX, int src
     }
  
 private static Direction getValidEntryPoint(CalculationContext context, int srcX, int srcY, int srcZ, int jumpX, int jumpY, int jumpZ, Direction jumpDirection, Direction destDirection, JumpType type) {
+    //if (!type){
+//	return null;
+//    }
     switch (type) {
         case EDGE_NEO:
             jumpDirection = jumpDirection.getOpposite();
@@ -1505,6 +1531,7 @@ public MovementState updateState(MovementState state) {
             	}
             	break;
             case EDGE:
+		BaritoneAPI.getSettings().logger.value.accept(Component.literal("edge"));
                 if (jumpTime <= 15 && ticksSinceJump < jumpTime - 2) {
                     if (Math.abs(jumpAngle) < 40) { // 33 degree jump
                         state.setTarget(new MovementState.MovementTarget(
@@ -1602,6 +1629,10 @@ public MovementState updateState(MovementState state) {
             state.getInputStates().remove(Input.MOVE_FORWARD);
         }
     }
+
+
+	
+
 
     return state;
 }

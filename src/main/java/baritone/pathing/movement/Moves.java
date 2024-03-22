@@ -24,6 +24,7 @@ import net.minecraft.core.Direction;
 
 import java.util.Collection;
 import java.util.Collections;
+import baritone.api.utils.Helper;
 
 /**
  * An enum of all possible movements attached to all possible directions they could be taken in
@@ -341,6 +342,7 @@ public enum Moves {
         @Override
         public Collection<Movement> getMultiDestination(CalculationContext context, BetterBlockPos src) {
             return MovementParkourAdv.cost(context, src, Direction.NORTH);
+	    //Helper.logDebug(MovementParkourAdv.cost(context, src, Direction.NORTH).toString());
         }
 
         @Override
@@ -362,7 +364,8 @@ public enum Moves {
 
         @Override
         public Collection<Movement> getMultiDestination(CalculationContext context, BetterBlockPos src) {
-            return MovementParkourAdv.cost(context, src, Direction.SOUTH);
+           return MovementParkourAdv.cost(context, src, Direction.SOUTH);
+	   //Helper.logDebug(MovementParkourAdv.cost(context, src, Direction.SOUTH).toString());
         }
 
         @Override
@@ -385,6 +388,7 @@ public enum Moves {
         @Override
         public Collection<Movement> getMultiDestination(CalculationContext context, BetterBlockPos src) {
             return MovementParkourAdv.cost(context, src, Direction.EAST);
+	    //Helper.logDebug(MovementParkourAdv.cost(context, src, Direction.EAST).toString());
         }
 
         @Override
@@ -407,6 +411,7 @@ public enum Moves {
         @Override
         public Collection<Movement> getMultiDestination(CalculationContext context, BetterBlockPos src) {
             return MovementParkourAdv.cost(context, src, Direction.WEST);
+	    //Helper.logDebug(MovementParkourAdv.cost(context, src, Direction.WEST).toString());
         }
 
         @Override

@@ -53,9 +53,11 @@
 A Minecraft pathfinder bot.
 
 This is a fork that attempts to merge [Zephreo's diagonal parkour](https://github.com/Zephreo/baritone/tree/master) additions with 1.20.4.
-This should now be buildable, I am now working on cleaning the code that was messily ported.
+This should now be buildable. New additions may be slow, since I don't know this project 100%, so please be patient.
 
 
+
+to use the new features, @allowParkourAdv has to be enabled.
 
 
 [**Baritone Discord Server**](http://discord.gg/s6fRBAUpmr)

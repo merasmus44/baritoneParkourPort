@@ -504,14 +504,17 @@ public class MovementParkourAdv extends Movement {
 
 
 	        if (type == JumpType.MOMENTUM) {
-	            Direction oppositeDirection = jumpDirection.getOpposite();
-	            if (MovementHelper.fullyPassable(context, src.x + oppositeDirection.getStepX(), src.y, src.z + oppositeDirection.getStepZ()) &&
-	                MovementHelper.fullyPassable(context, src.x + oppositeDirection.getStepX(), src.y + 1, src.z + oppositeDirection.getStepZ())) {
-	                type = JumpType.MOMENTUM_NO_BLOCK;
-	            } else {
-	                type = JumpType.MOMENTUM_BLOCK;
-	            }
-	        }
+    int oppositeXOffset = -jumpDirection.getStepX();
+    int oppositeZOffset = -jumpDirection.getStepZ();
+    
+    if (MovementHelper.fullyPassable(context, src.getX() + oppositeXOffset, src.getY(), src.getZ() + oppositeZOffset) &&
+        MovementHelper.fullyPassable(context, src.getX() + oppositeXOffset, src.getY() + 1, src.getZ() + oppositeZOffset)) {
+        type = JumpType.MOMENTUM_NO_BLOCK;
+    } else {
+        type = JumpType.MOMENTUM_BLOCK;
+    }
+}
+
 	        out.add(new MovementParkourAdv(context, src, new BetterBlockPos(res.x, res.y, res.z), jumpDirection, type));
 	        res = res.getNext();
 	    }

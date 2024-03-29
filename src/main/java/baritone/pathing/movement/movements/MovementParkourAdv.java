@@ -1361,7 +1361,6 @@ public MovementState updateState(MovementState state) {
     double distFromStartXZ = ctx.playerFeetAsVec().distanceTo(startLoc.subtract(0, startLoc.y - ctx.playerFeetAsVec().y, 0));
 
     MovementHelper.moveTowards(ctx, state, dest); // set initial look direction (for prediction)
-    //BIG YIKES! MOVEMENT PREDICTION WAS COMPLETELY REMOVED, that's gonna be a pain to port :/
     MovementPrediction.PredictionResult future = MovementPrediction.getFutureLocation(ctx.player(), state, 1); // The predicted location 1 tick in the future
     Vec3 motionVecPred = future.getPosition().subtract(ctx.playerFeetAsVec());
     int ticksRemaining = jumpTime - ticksSinceJump;

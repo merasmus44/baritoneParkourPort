@@ -125,6 +125,9 @@ BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAnd
 
 # FAQ
 
+## Why isn't this just in the main mod?
+The features aren't fully fleshed out yet. There are still some jumps baritone cannot do yet, and not all current jumps are reliable 
+
 ## Can I use Baritone as a library in my custom utility client?
 
 That's what it's for, sure! (As long as usage complies with the LGPL 3.0 License)
